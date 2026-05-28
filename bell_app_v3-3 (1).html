@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>الجرس الناطق الذكي v3 | مدارس الأوائل النموذجية</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1e5f7a">
+<meta name="description" content="تطبيق الجرس الناطق الذكي مع نظام تنبيهات تلقائي وأصوات مدمجة">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,system-ui,sans-serif}
+body{background:linear-gradient(145deg,#0b3b4a 0%,#0a2e3a 100%);min-height:100vh;padding:1.5rem 1rem;color:#fff}
+.container{max-width:1200px;margin:0 auto}
+.school-header{background:#f9b81b;border-radius:48px;padding:1rem 2rem;margin-bottom:1.5rem;text-align:center;box-shadow:0 12px 20px -8px rgba(0,0,0,0.4)}
+.school-header h1{font-size:1.8rem;color:#1e3a2f}
+.school-header h2{font-size:1.2rem;color:#2c2b26}
+.clock-display{background:rgba(0,0,0,0.3);border-radius:32px;padding:1rem;margin-bottom:1.5rem;text-align:center;backdrop-filter:blur(8px)}
+.clock-display .time{font-size:2.5rem;font-weight:bold;color:#f9b81b;direction:ltr;display:inline-block}
+.clock-display .date{font-size:1rem;color:#ffecb3;margin-top:5px}
+.clock-display .next-event{margin-top:10px;padding:8px 16px;background:rgba(249,184,27,0.2);border-radius:20px;display:inline-block;font-size:0.95rem}
+.hero-card{background:rgba(255,255,255,0.1);backdrop-filter:blur(8px);border-radius:48px;padding:1.5rem;margin-bottom:1.5rem;text-align:center}
+.hero-card h3{color:#ffecb3;margin-bottom:10px}
+.status-indicator{display:inline-block;padding:6px 16px;border-radius:20px;font-size:0.9rem;margin:8px 4px;font-weight:bold}
+.status-on{background:#22c55e;color:#fff}
+.status-off{background:#ef4444;color:#fff}
+.action-bar{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:20px}
+.btn-global{background:#2c5a4b;border:none;padding:10px 24px;border-radius:60px;font-weight:bold;color:white;cursor:pointer;box-shadow:0 4px 6px rgba(0,0,0,0.2);transition:transform 0.2s,background 0.2s}
+.btn-global:hover{transform:translateY(-2px);background:#3a7561}
+.btn-global:active{transform:translateY(0)}
+.btn-global.danger{background:#b91c1c}
+.btn-global.warning{background:#b86f2c}
+.btn-global.primary{background:#1e5f7a}
+.settings-panel{background:rgba(255,255,255,0.08);border-radius:32px;padding:1.2rem;margin-bottom:1.5rem;backdrop-filter:blur(8px)}
+.settings-panel h3{color:#f9b81b;margin-bottom:12px;font-size:1.1rem}
+.settings-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px}
+.settings-row label{min-width:120px;color:#ffecb3}
+.settings-row select,.settings-row input{padding:8px 12px;border-radius:20px;border:none;background:#fff;color:#333;font-weight:bold}
+.settings-row input[type=range]{min-width:150px}
+.schedule-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.3rem;margin-bottom:1.5rem}
+.card{background:#fff;border-radius:32px;padding:1.2rem 1rem 1.6rem;text-align:center;color:#333;position:relative;transition:transform 0.3s,box-shadow 0.3s}
+.card:hover{transform:translateY(-4px);box-shadow:0 10px 25px rgba(0,0,0,0.3)}
+.card.active{box-shadow:0 0 0 4px #22c55e,0 0 30px rgba(34,197,94,0.5);animation:pulse 1.5s infinite}
+.card.upcoming{box-shadow:0 0 0 3px #f9b81b}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 4px #22c55e,0 0 30px rgba(34,197,94,0.5)}50%{box-shadow:0 0 0 4px #22c55e,0 0 50px rgba(34,197,94,0.8)}}
+.card h3{background:#ffedd5;display:inline-block;padding:4px 20px;border-radius:40px;color:#b45309;margin-bottom:8px}
+.time-info{background:#eef2f5;border-radius:28px;padding:6px 12px;margin:12px 0;font-weight:bold;color:#1e5f7a;direction:ltr;display:inline-block}
+.countdown-badge{position:absolute;top:10px;left:10px;background:#22c55e;color:#fff;padding:4px 10px;border-radius:15px;font-size:0.8rem;font-weight:bold;display:none}
+.countdown-badge.show{display:block}
+.announce-btn{background:#2c6e5f;border:none;color:white;padding:10px 16px;width:90%;border-radius:48px;cursor:pointer;margin-top:10px;box-shadow:0 3px 0 #1d4a3e;font-weight:bold;transition:transform 0.2s}
+.announce-btn:hover{transform:scale(1.03)}
+.announce-btn:active{transform:scale(0.97);box-shadow:0 1px 0 #1d4a3e}
+.special-btn{background:#b86f2c;box-shadow:0 3px 0 #7a4516}
+.info-section{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem;margin-top:1rem}
+.info-card{background:#fef7e8;border-radius:28px;padding:1rem;color:#333}
+.info-card h4{font-size:1.3rem;color:#b45309;border-right:5px solid #f59e0b;padding-right:12px;margin-bottom:12px}
+.voice-btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.small-voice{background:#e0e7ff;border:none;padding:6px 14px;border-radius:30px;font-weight:bold;cursor:pointer;transition:background 0.2s}
+.small-voice:hover{background:#c7d2fe}
+.custom-message{background:rgba(255,255,255,0.1);border-radius:32px;padding:1.2rem;margin-top:1.5rem;backdrop-filter:blur(8px)}
+.custom-message h3{color:#f9b81b;margin-bottom:12px}
+.custom-message textarea{width:100%;padding:12px;border-radius:20px;border:none;font-size:1rem;font-family:inherit;resize:vertical;min-height:80px;direction:rtl}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1e5f7a;color:#fff;padding:14px 28px;border-radius:30px;box-shadow:0 8px 20px rgba(0,0,0,0.4);z-index:1000;opacity:0;transition:opacity 0.3s;font-weight:bold}
+.toast.show{opacity:1}
+.toast.error{background:#b91c1c}
+.toast.success{background:#22c55e}
+footer{text-align:center;margin-top:2rem;color:#ffefcf;padding:1rem}
+.install-banner{background:#000000aa;border-radius:40px;padding:8px 16px;display:inline-block;margin-top:10px}
+.fab-help{position:fixed;bottom:20px;right:20px;width:55px;height:55px;border-radius:50%;background:#f9b81b;border:none;font-size:1.5rem;cursor:pointer;box-shadow:0 6px 15px rgba(0,0,0,0.3);z-index:100}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;padding:20px}
+.modal.show{display:flex}
+.modal-content{background:#fff;color:#333;border-radius:30px;padding:2rem;max-width:500px;width:100%;max-height:80vh;overflow-y:auto}
+.modal-content h2{color:#1e5f7a;margin-bottom:15px}
+.modal-content ul{margin:10px 0;padding-right:20px;line-height:1.8}
+.modal-close{background:#1e5f7a;color:#fff;border:none;padding:10px 20px;border-radius:20px;cursor:pointer;margin-top:15px;font-weight:bold}
+@media(max-width:600px){.school-header h1{font-size:1.3rem}.clock-display .time{font-size:1.8rem}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="school-header">
+  <h1>🏫 مدارس الأوائل الأهلية النموذجية</h1>
+  <h2>الجرس الناطق الذكي v3.0 | نظام الإعلانات الصوتية</h2>
+</div>
+
+<!-- ساعة رقمية وعرض الحدث القادم -->
+<div class="clock-display">
+  <div class="time" id="liveClock">--:--:--</div>
+  <div class="date" id="liveDate">جاري التحميل...</div>
+  <div class="next-event" id="nextEvent">⏳ جاري حساب الحدث القادم...</div>
+</div>
+
+<!-- بطاقة التحكم الرئيسية -->
+<div class="hero-card">
+  <h3>🔊 نظام التنبيهات الصوتية الذكي</h3>
+  <div>
+    <span class="status-indicator" id="audioStatus">🔇 الصوت غير مفعل</span>
+    <span class="status-indicator" id="autoStatus">⏸️ التنبيه التلقائي متوقف</span>
+  </div>
+  <div class="action-bar">
+    <button class="btn-global primary" id="enableAudioBtn">🎤 تفعيل الصوت</button>
+    <button class="btn-global" id="testVoiceBtn">🧪 اختبار النطق</button>
+    <button class="btn-global warning" id="autoModeBtn">⏰ تشغيل التنبيه التلقائي</button>
+    <button class="btn-global danger" id="stopSpeechBtn">⏹️ إيقاف الإعلان</button>
+  </div>
+</div>
+
+<!-- لوحة الإعدادات -->
+<div class="settings-panel">
+  <h3>⚙️ إعدادات الصوت</h3>
+  <div class="settings-row">
+    <label>🗣️ الصوت:</label>
+    <select id="voiceSelect"><option>جاري تحميل الأصوات...</option></select>
+  </div>
+  <div class="settings-row">
+    <label>⚡ السرعة:</label>
+    <input type="range" id="rateRange" min="0.5" max="1.5" step="0.1" value="0.9">
+    <span id="rateValue">0.9</span>
+  </div>
+  <div class="settings-row">
+    <label>🎵 طبقة الصوت:</label>
+    <input type="range" id="pitchRange" min="0.5" max="2" step="0.1" value="1">
+    <span id="pitchValue">1.0</span>
+  </div>
+  <div class="settings-row">
+    <label>🔔 نوع الجرس:</label>
+    <select id="bellTypeSelect">
+      <option value="classic">كلاسيكي (نغمة واحدة)</option>
+      <option value="double">جرس مزدوج</option>
+      <option value="chime" selected>جرس مدرسي (3 نغمات)</option>
+      <option value="alarm">جرس تنبيه قوي</option>
+    </select>
+  </div>
+  <div class="settings-row">
+    <label>🔁 تكرار الإعلان:</label>
+    <select id="repeatSelect">
+      <option value="1" selected>مرة واحدة</option>
+      <option value="2">مرتان</option>
+      <option value="3">ثلاث مرات</option>
+    </select>
+  </div>
+</div>
+
+<!-- الحصص -->
+<h2 style="margin:1rem 0;color:#f9b81b">📚 الحصص الدراسية</h2>
+<div class="schedule-grid" id="lessonsGrid"></div>
+
+<!-- الفسح -->
+<h2 style="margin:1rem 0;color:#f9b81b">☕ الفسح المدرسية</h2>
+<div class="schedule-grid" id="breaksGrid"></div>
+
+<!-- نهاية الدوام -->
+<h2 style="margin:1rem 0;color:#f9b81b">🏁 نهاية الدوام</h2>
+<div class="schedule-grid" id="endGrid"></div>
+
+<!-- رسائل سريعة -->
+<div class="info-section">
+  <div class="info-card">
+    <h4>🗣️ رسائل أثناء الفسح</h4>
+    <div class="voice-btns" id="breakMessages"></div>
+  </div>
+  <div class="info-card">
+    <h4>📋 تعليمات وتوضيحات</h4>
+    <div class="voice-btns" id="generalMessages"></div>
+  </div>
+  <div class="info-card">
+    <h4>🚨 إعلانات الطوارئ</h4>
+    <div class="voice-btns" id="emergencyMessages"></div>
+  </div>
+</div>
+
+<!-- رسالة مخصصة -->
+<div class="custom-message">
+  <h3>✍️ إعلان مخصص (اكتب أي رسالة)</h3>
+  <textarea id="customText" placeholder="اكتب الإعلان الذي تريد قوله هنا..."></textarea>
+  <div class="action-bar" style="margin-top:10px">
+    <button class="btn-global primary" id="speakCustomBtn">📢 إذاعة الإعلان</button>
+    <button class="btn-global" id="saveCustomBtn">💾 حفظ كقالب</button>
+  </div>
+  <div id="savedTemplates" style="margin-top:15px"></div>
+</div>
+
+<footer>
+  <p>📱 تطبيق ويب قابل للتثبيت | يعمل بدون إنترنت | أصوات مدمجة</p>
+  <span class="install-banner">🔊 مدارس الأوائل النموذجية – الجرس الناطق الذكي v3.0</span>
+</footer>
+
+</div>
+
+<!-- زر المساعدة -->
+<button class="fab-help" id="helpBtn" title="مساعدة">❓</button>
+
+<!-- نافذة المساعدة -->
+<div class="modal" id="helpModal">
+  <div class="modal-content">
+    <h2>📖 دليل الاستخدام</h2>
+    <h3 style="color:#b45309;margin-top:10px">⚠️ مهم: إذا لم يعمل الصوت</h3>
+    <ul>
+      <li>اضغط زر <b>"🎤 تفعيل الصوت"</b> أول مرة (متطلب أمني للمتصفحات)</li>
+      <li>تأكد من أن صوت الجهاز غير مكتوم</li>
+      <li>استخدم متصفح حديث (Chrome، Edge، Safari)</li>
+      <li>على iPhone: افتح الموقع من Safari وفعّل الصوت يدوياً</li>
+      <li>اختر الصوت العربي من قائمة الإعدادات</li>
+      <li>اضغط <b>"🧪 اختبار النطق"</b> للتأكد من عمل الصوت</li>
+    </ul>
+    <h3 style="color:#b45309;margin-top:15px">✨ الميزات الجديدة</h3>
+    <ul>
+      <li>⏰ <b>تنبيه تلقائي</b>: يدوي الجرس في موعد كل حصة تلقائياً</li>
+      <li>🕐 <b>ساعة حية</b>: تعرض الوقت والحدث القادم</li>
+      <li>🎨 <b>تمييز بصري</b>: للحصة النشطة حالياً</li>
+      <li>🔔 <b>أنواع جرس متعددة</b>: 4 نغمات مختلفة</li>
+      <li>✍️ <b>إعلانات مخصصة</b>: اكتب أي رسالة وقم بإذاعتها</li>
+      <li>💾 <b>حفظ القوالب</b>: احفظ إعلاناتك المفضلة</li>
+      <li>⚙️ <b>إعدادات الصوت</b>: تحكم في السرعة والطبقة</li>
+    </ul>
+    <button class="modal-close" onclick="document.getElementById('helpModal').classList.remove('show')">حسناً، فهمت ✓</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ==================== البيانات ==================== */
+const schedule = {
+  lessons: [
+    {id:'l1', icon:'📖', name:'الحصة الأولى', start:'07:15', end:'08:00', msg:'تنبيه: بدء الحصة الأولى، يرجى جميع الطلاب التوجه إلى فصولهم والاستعداد للدرس.'},
+    {id:'l2', icon:'✏️', name:'الحصة الثانية', start:'08:00', end:'08:45', msg:'تنبيه: بدء الحصة الثانية، نتمنى للجميع تركيزاً وتوفيقاً.'},
+    {id:'l3', icon:'📚', name:'الحصة الثالثة', start:'08:45', end:'09:30', msg:'تنبيه: بدء الحصة الثالثة، يرجى الالتزام بالهدوء والنظام داخل الفصول.'},
+    {id:'l4', icon:'🧪', name:'الحصة الرابعة', start:'09:30', end:'10:15', msg:'تنبيه: بدء الحصة الرابعة، تذكير بالتفاعل الإيجابي مع المعلمين.'},
+    {id:'l5', icon:'📐', name:'الحصة الخامسة', start:'10:15', end:'11:00', msg:'تنبيه: بدء الحصة الخامسة، استعدوا لاكتساب المهارات والمعارف الجديدة.'},
+    {id:'l6', icon:'🎨', name:'الحصة السادسة', start:'11:00', end:'11:45', msg:'تنبيه: بدء الحصة السادسة والأخيرة قبل نهاية الدوام، وفقكم الله.'}
+  ],
+  breaks: [
+    {id:'b1', icon:'🌱', name:'فسحة البرعم', start:'09:30', end:'09:50', msg:'إعلان فسحة البرعم: الآن وقت الفسحة الخاصة بالأطفال، يمكنكم تناول وجبتكم وممارسة الألعاب بهدوء تحت إشراف المعلمين.', special:true},
+    {id:'b2', icon:'👦', name:'فسحة الأولاد', start:'10:00', end:'10:20', msg:'إعلان فسحة الأولاد: حان وقت فسحة الأولاد، يرجى عدم التزاحم والرجوع مبكراً قبل انتهاء الفسحة بدقيقتين.', special:true},
+    {id:'b3', icon:'👧', name:'فسحة البنات', start:'10:20', end:'10:40', msg:'إعلان فسحة البنات: فسحة خاصة للبنات، نتمنى وقتاً ممتعاً مع الالتزام بالزي المدرسي والنظام العام.', special:true}
+  ],
+  end: [
+    {id:'e1', icon:'🔔', name:'انتهاء الدوام', start:'11:45', end:'11:45', msg:'انتهاء الدوام الرسمي للجميع، شكراً لالتزامكم ونشاطكم اليوم. نتمنى لكم يوماً سعيداً.'},
+    {id:'e2', icon:'🚸', name:'تعليمات الخروج', start:'11:46', end:'11:50', msg:'تعليمات الخروج حسب الآتي: أولاً يغادر طلاب المرحلة الابتدائية مع المعلمين، ثم طلاب المرحلة المتوسطة، ثم طلاب المرحلة الثانوية. يمنع التزاحم أو الجري، ويجب أن يكون الخروج هادئاً من الأبواب المخصصة لكل صف.', special:true}
+  ]
+};
+
+const quickMessages = {
+  breaks: [
+    {icon:'⏳', label:'متبقي 5 دقائق', msg:'تنبيه: متبقي 5 دقائق على انتهاء الفسحة، استعدوا للعودة إلى الفصول.'},
+    {icon:'⌛', label:'دقيقتان', msg:'تنبيه: متبقي دقيقتان على انتهاء الفسحة، يرجى التوجه بهدوء إلى فصولكم.'},
+    {icon:'🔔', label:'انتهت الفسحة', msg:'انتهت الفسحة، جميع الطلاب إلى فصولهم لبدء الحصة التالية.'},
+    {icon:'🧹', label:'نظافة', msg:'نظافة الساحة مسؤولية الجميع، نشكر الطلاب الملتزمين.'},
+    {icon:'⚠️', label:'سلامة', msg:'نذكّر الطلاب بعدم الركض والأكل في الممرات حفاظاً على سلامتكم.'}
+  ],
+  general: [
+    {icon:'🚶', label:'ترتيب الخروج', msg:'تعليمات عامة: يبدأ الخروج حسب الآتي: أولاً الصفوف الابتدائية ثم المتوسطة ثم الثانوية، مع الالتزام بالهدوء وعدم التدافع.'},
+    {icon:'ℹ️', label:'توضيح', msg:'توضيح هام: نرجو من جميع الطلاب احترام مواعيد الحصص والفسح، والحرص على الاستماع للإعلانات الصوتية للجرس الناطق.'},
+    {icon:'📿', label:'الصلاة', msg:'تذكير بأداء الصلاة في وقتها مع الجماعة، نسأل الله القبول.'},
+    {icon:'🎓', label:'اصطفاف صباحي', msg:'يرجى من جميع الطلاب التوجه إلى ساحة الاصطفاف الصباحي للنشيد الوطني والإذاعة المدرسية.'},
+    {icon:'👨‍🏫', label:'اجتماع المعلمين', msg:'تنبيه للمعلمين والمعلمات: يرجى التوجه إلى غرفة الاجتماعات في الفسحة القادمة.'}
+  ],
+  emergency: [
+    {icon:'🚨', label:'إخلاء الطوارئ', msg:'إجراءات الطوارئ: يرجى من جميع الطلاب والمعلمين التوجه فوراً وبهدوء إلى ساحة الطوارئ بقيادة المعلمين. لا تستخدموا المصاعد.'},
+    {icon:'🔥', label:'حريق', msg:'تنبيه عاجل: يرجى إخلاء المبنى فوراً من أقرب المخارج. اتبعوا تعليمات المعلمين ولا تذعروا.'},
+    {icon:'🏥', label:'حالة طبية', msg:'يرجى من المسعف الأول التوجه فوراً إلى الموقع المحدد.'},
+    {icon:'📞', label:'إخلاء آمن', msg:'انتهت حالة الطوارئ، يمكنكم العودة إلى الفصول بهدوء وانتظام.'}
+  ]
+};
+
+/* ==================== الحالة العامة ==================== */
+let audioCtx = null;
+let isAudioAllowed = false;
+let autoMode = false;
+let availableVoices = [];
+let selectedVoice = null;
+const triggeredToday = new Set();
+
+/* ==================== الأدوات المساعدة ==================== */
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function timeToMinutes(t) {
+  const [h,m] = t.split(':').map(Number);
+  return h*60 + m;
+}
+
+function currentMinutes() {
+  const d = new Date();
+  return d.getHours()*60 + d.getMinutes();
+}
+
+/* ==================== الجرس الصوتي ==================== */
+function playBell(type='chime') {
+  if (!isAudioAllowed) return Promise.resolve();
+  return new Promise(resolve => {
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const now = audioCtx.currentTime;
+      const patterns = {
+        classic: [[880, 0, 0.6]],
+        double: [[880, 0, 0.4],[660, 0.5, 0.4]],
+        chime: [[1320, 0, 0.3],[1050, 0.35, 0.3],[840, 0.7, 0.5]],
+        alarm: [[1200, 0, 0.2],[800, 0.25, 0.2],[1200, 0.5, 0.2],[800, 0.75, 0.2],[1200, 1, 0.4]]
+      };
+      const pattern = patterns[type] || patterns.chime;
+      let maxEnd = 0;
+      pattern.forEach(([freq, delay, dur]) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.0001, now+delay);
+        gain.gain.exponentialRampToValueAtTime(0.4, now+delay+0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now+delay+dur);
+        osc.start(now+delay);
+        osc.stop(now+delay+dur+0.05);
+        maxEnd = Math.max(maxEnd, delay+dur);
+      });
+      setTimeout(resolve, (maxEnd+0.2)*1000);
+    } catch(e) { console.warn(e); resolve(); }
+  });
+}
+
+/* ==================== النطق ==================== */
+function loadVoices() {
+  availableVoices = window.speechSynthesis.getVoices();
+  const arabicVoices = availableVoices.filter(v => v.lang.startsWith('ar'));
+  const select = document.getElementById('voiceSelect');
+  select.innerHTML = '';
+  if (arabicVoices.length === 0) {
+    const opt = document.createElement('option');
+    opt.textContent = 'الافتراضي (' + (availableVoices[0]?.name || 'النظام') + ')';
+    opt.value = '';
+    select.appendChild(opt);
+  } else {
+    arabicVoices.forEach((v,i) => {
+      const opt = document.createElement('option');
+      opt.value = v.name;
+      opt.textContent = v.name + ' (' + v.lang + ')';
+      select.appendChild(opt);
+    });
+    selectedVoice = arabicVoices[0];
+  }
+  select.addEventListener('change', e => {
+    selectedVoice = availableVoices.find(v => v.name === e.target.value) || null;
+  });
+}
+
+function speakText(msg, repeat=1) {
+  return new Promise(resolve => {
+    if (!msg) return resolve();
+    if (!('speechSynthesis' in window)) {
+      showToast('المتصفح لا يدعم النطق', 'error');
+      return resolve();
+    }
+    window.speechSynthesis.cancel();
+    let count = 0;
+    const speakOnce = () => {
+      const u = new SpeechSynthesisUtterance(msg);
+      u.lang = 'ar-SA';
+      u.rate = parseFloat(document.getElementById('rateRange').value);
+      u.pitch = parseFloat(document.getElementById('pitchRange').value);
+      u.volume = 1;
+      if (selectedVoice) u.voice = selectedVoice;
+      u.onend = () => {
+        count++;
+        if (count < repeat) setTimeout(speakOnce, 500);
+        else resolve();
+      };
+      u.onerror = () => resolve();
+      window.speechSynthesis.speak(u);
+    };
+    speakOnce();
+  });
+}
+
+async function announceWithBell(txt) {
+  if (!isAudioAllowed) {
+    showToast('⚠️ يرجى تفعيل الصوت أولاً', 'error');
+    return;
+  }
+  const bellType = document.getElementById('bellTypeSelect').value;
+  const repeat = parseInt(document.getElementById('repeatSelect').value);
+  await playBell(bellType);
+  await new Promise(r => setTimeout(r, 200));
+  await speakText(txt, repeat);
+}
+
+/* ==================== تفعيل الصوت ==================== */
+function enableAudio() {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    isAudioAllowed = true;
+    // تشغيل صوت صامت لفك القيود
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    gain.gain.value = 0.001;
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime+0.1);
+    // تهيئة speechSynthesis
+    const u = new SpeechSynthesisUtterance(' ');
+    u.volume = 0.01;
+    window.speechSynthesis.speak(u);
+    document.getElementById('audioStatus').className = 'status-indicator status-on';
+    document.getElementById('audioStatus').textContent = '🔊 الصوت مفعل';
+    showToast('✅ تم تفعيل النظام الصوتي بنجاح', 'success');
+    setTimeout(() => {
+      playBell('chime');
+      setTimeout(() => speakText('تم تفعيل النظام الصوتي لمدارس الأوائل النموذجية بنجاح.'), 800);
+    }, 300);
+  } catch(e) {
+    showToast('❌ فشل تفعيل الصوت: ' + e.message, 'error');
+  }
+}
+
+/* ==================== التنبيه التلقائي ==================== */
+function toggleAutoMode() {
+  if (!isAudioAllowed) {
+    showToast('⚠️ فعّل الصوت أولاً', 'error');
+    return;
+  }
+  autoMode = !autoMode;
+  const btn = document.getElementById('autoModeBtn');
+  const status = document.getElementById('autoStatus');
+  if (autoMode) {
+    btn.textContent = '⏹️ إيقاف التنبيه التلقائي';
+    btn.classList.remove('warning');
+    btn.classList.add('danger');
+    status.className = 'status-indicator status-on';
+    status.textContent = '✅ التنبيه التلقائي نشط';
+    showToast('⏰ التنبيه التلقائي مفعّل - سيدوي الجرس تلقائياً في موعد كل حصة', 'success');
+  } else {
+    btn.textContent = '⏰ تشغيل التنبيه التلقائي';
+    btn.classList.remove('danger');
+    btn.classList.add('warning');
+    status.className = 'status-indicator status-off';
+    status.textContent = '⏸️ التنبيه التلقائي متوقف';
+    showToast('تم إيقاف التنبيه التلقائي', '');
+  }
+}
+
+function checkAutoTriggers() {
+  if (!autoMode) return;
+  const nowMin = currentMinutes();
+  const all = [...schedule.lessons, ...schedule.breaks, ...schedule.end];
+  all.forEach(item => {
+    const itemMin = timeToMinutes(item.start);
+    const key = new Date().toDateString() + '-' + item.id;
+    if (itemMin === nowMin && !triggeredToday.has(key)) {
+      triggeredToday.add(key);
+      announceWithBell(item.msg);
+      showToast('🔔 ' + item.name + ' - تنبيه تلقائي', 'success');
+    }
+  });
+}
+
+/* ==================== الساعة والحدث القادم ==================== */
+function updateClock() {
+  const d = new Date();
+  const h = String(d.getHours()).padStart(2,'0');
+  const m = String(d.getMinutes()).padStart(2,'0');
+  const s = String(d.getSeconds()).padStart(2,'0');
+  document.getElementById('liveClock').textContent = `${h}:${m}:${s}`;
+  const days = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  const months = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  document.getElementById('liveDate').textContent = `${days[d.getDay()]}، ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+  updateNextEvent();
+  updateActiveCards();
+  checkAutoTriggers();
+}
+
+function updateNextEvent() {
+  const nowMin = currentMinutes();
+  const all = [...schedule.lessons, ...schedule.breaks, ...schedule.end]
+    .map(i => ({...i, mins: timeToMinutes(i.start)}))
+    .sort((a,b) => a.mins - b.mins);
+  const next = all.find(i => i.mins > nowMin);
+  const nextEl = document.getElementById('nextEvent');
+  if (next) {
+    const diff = next.mins - nowMin;
+    const hrs = Math.floor(diff/60);
+    const mins = diff%60;
+    const timeStr = hrs > 0 ? `${hrs} ساعة و ${mins} دقيقة` : `${mins} دقيقة`;
+    nextEl.innerHTML = `⏭️ القادم: <b>${next.icon} ${next.name}</b> الساعة <b>${next.start}</b> (بعد ${timeStr})`;
+  } else {
+    nextEl.innerHTML = '✅ انتهى الدوام اليوم';
+  }
+}
+
+function updateActiveCards() {
+  const nowMin = currentMinutes();
+  document.querySelectorAll('.card').forEach(card => {
+    const start = card.dataset.start;
+    const end = card.dataset.end;
+    if (!start) return;
+    const sMin = timeToMinutes(start);
+    const eMin = timeToMinutes(end);
+    const badge = card.querySelector('.countdown-badge');
+    card.classList.remove('active','upcoming');
+    if (nowMin >= sMin && nowMin <= eMin) {
+      card.classList.add('active');
+      if (badge) { badge.textContent = '🟢 نشط الآن'; badge.classList.add('show'); }
+    } else if (sMin - nowMin > 0 && sMin - nowMin <= 10) {
+      card.classList.add('upcoming');
+      if (badge) { badge.textContent = `⏰ بعد ${sMin-nowMin} د`; badge.classList.add('show'); }
+    } else {
+      if (badge) badge.classList.remove('show');
+    }
+  });
+}
+
+/* ==================== بناء الواجهة ==================== */
+function buildScheduleCards(items, containerId) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  items.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.start = item.start;
+    card.dataset.end = item.end;
+    card.innerHTML = `
+      <div class="countdown-badge"></div>
+      <h3>${item.icon} ${item.name}</h3>
+      <div class="time-info">⏰ ${item.start}${item.end !== item.start ? ' – '+item.end : ''}</div>
+      <button class="announce-btn ${item.special ? 'special-btn':''}">🔔 ${item.name}</button>
+    `;
+    card.querySelector('.announce-btn').addEventListener('click', () => announceWithBell(item.msg));
+    container.appendChild(card);
+  });
+}
+
+function buildQuickMessages(items, containerId) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  items.forEach(item => {
+    const btn = document.createElement('button');
+    btn.className = 'small-voice';
+    btn.textContent = item.icon + ' ' + item.label;
+    btn.addEventListener('click', () => announceWithBell(item.msg));
+    container.appendChild(btn);
+  });
+}
+
+/* ==================== القوالب المحفوظة ==================== */
+function loadTemplates() {
+  const saved = JSON.parse(localStorage.getItem('savedTemplates') || '[]');
+  const container = document.getElementById('savedTemplates');
+  container.innerHTML = '';
+  if (saved.length === 0) return;
+  const title = document.createElement('div');
+  title.style.color = '#f9b81b';
+  title.style.marginBottom = '8px';
+  title.textContent = '📚 القوالب المحفوظة:';
+  container.appendChild(title);
+  const wrap = document.createElement('div');
+  wrap.className = 'voice-btns';
+  saved.forEach((tpl, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'small-voice';
+    btn.style.background = '#fde68a';
+    btn.textContent = '📢 ' + tpl.substring(0,30) + (tpl.length>30?'...':'');
+    btn.title = tpl;
+    btn.addEventListener('click', () => announceWithBell(tpl));
+    btn.addEventListener('contextmenu', e => {
+      e.preventDefault();
+      if (confirm('حذف هذا القالب؟')) {
+        saved.splice(i,1);
+        localStorage.setItem('savedTemplates', JSON.stringify(saved));
+        loadTemplates();
+      }
+    });
+    wrap.appendChild(btn);
+  });
+  container.appendChild(wrap);
+}
+
+/* ==================== التهيئة ==================== */
+document.addEventListener('DOMContentLoaded', () => {
+  buildScheduleCards(schedule.lessons, 'lessonsGrid');
+  buildScheduleCards(schedule.breaks, 'breaksGrid');
+  buildScheduleCards(schedule.end, 'endGrid');
+  buildQuickMessages(quickMessages.breaks, 'breakMessages');
+  buildQuickMessages(quickMessages.general, 'generalMessages');
+  buildQuickMessages(quickMessages.emergency, 'emergencyMessages');
+  loadTemplates();
+
+  document.getElementById('enableAudioBtn').addEventListener('click', enableAudio);
+  document.getElementById('stopSpeechBtn').addEventListener('click', () => {
+    window.speechSynthesis.cancel();
+    showToast('⏹️ تم إيقاف الإعلان', '');
+  });
+  document.getElementById('testVoiceBtn').addEventListener('click', () => {
+    if (!isAudioAllowed) { showToast('فعّل الصوت أولاً', 'error'); return; }
+    announceWithBell('هذا اختبار للنظام الصوتي للجرس الناطق الذكي.');
+  });
+  document.getElementById('autoModeBtn').addEventListener('click', toggleAutoMode);
+  document.getElementById('helpBtn').addEventListener('click', () => {
+    document.getElementById('helpModal').classList.add('show');
+  });
+
+  document.getElementById('rateRange').addEventListener('input', e => {
+    document.getElementById('rateValue').textContent = e.target.value;
+  });
+  document.getElementById('pitchRange').addEventListener('input', e => {
+    document.getElementById('pitchValue').textContent = e.target.value;
+  });
+
+  document.getElementById('speakCustomBtn').addEventListener('click', () => {
+    const txt = document.getElementById('customText').value.trim();
+    if (!txt) { showToast('اكتب نص الإعلان أولاً', 'error'); return; }
+    announceWithBell(txt);
+  });
+  document.getElementById('saveCustomBtn').addEventListener('click', () => {
+    const txt = document.getElementById('customText').value.trim();
+    if (!txt) { showToast('لا يوجد نص لحفظه', 'error'); return; }
+    const saved = JSON.parse(localStorage.getItem('savedTemplates') || '[]');
+    saved.unshift(txt);
+    localStorage.setItem('savedTemplates', JSON.stringify(saved.slice(0,10)));
+    loadTemplates();
+    showToast('✅ تم حفظ القالب (انقر يمين للحذف)', 'success');
+  });
+
+  // تحميل الأصوات
+  if (window.speechSynthesis) {
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+
+  // الساعة كل ثانية
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // أول نقرة في أي مكان تفعّل الصوت
+  let firstInteraction = false;
+  document.body.addEventListener('click', () => {
+    if (!firstInteraction && !isAudioAllowed) {
+      firstInteraction = true;
+    }
+  }, {once:false});
+
+  // فحص التوافق
+  if (!('speechSynthesis' in window)) {
+    showToast('⚠️ المتصفح لا يدعم النطق - استخدم Chrome أو Edge', 'error');
+  }
+  if (!window.AudioContext && !window.webkitAudioContext) {
+    showToast('⚠️ المتصفح لا يدعم الصوت المتقدم', 'error');
+  }
+});
+
+/* ==================== PWA Service Worker ==================== */
+(function setupPWA(){
+  const manifestData = {
+    name:"الجرس الناطق - مدارس الأوائل",
+    short_name:"جرس الأوائل",
+    lang:"ar", dir:"rtl",
+    start_url:"./", display:"standalone",
+    theme_color:"#1e5f7a", background_color:"#0b3b4a",
+    icons:[{
+      src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231e5f7a'/%3E%3Ctext x='50' y='67' font-size='50' text-anchor='middle' fill='white' font-family='Arial'%3E🔔%3C/text%3E%3C/svg%3E",
+      sizes:"any", type:"image/svg+xml"
+    }]
+  };
+  const blob = new Blob([JSON.stringify(manifestData)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  let link = document.querySelector('link[rel="manifest"]');
+  if (!link) { link = document.createElement('link'); link.rel='manifest'; document.head.appendChild(link); }
+  link.href = url;
+})();
+</script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>
